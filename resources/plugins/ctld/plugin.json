@@ -24,7 +24,7 @@
         },
         {
             "nameInUI": "CTLD Debug",
-            "mnemonic": "ctld-debug",
+            "mnemonic": "debug",
             "defaultValue": false
         }
     ],

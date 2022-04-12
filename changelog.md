@@ -14,6 +14,7 @@ Saves from 5.x are not compatible with 6.0.
 * **[Flight Planning]** Added the ability to plan tankers for recovery on package flights.  AI does not plan.
 * **[Flight Planning]** Air to Ground flights now have ECM enabled on lock at the join point, and SEAD/DEAD also have ECM enabled on detection and lock at ingress.
 * **[Flight Planning]** AWACS flightplan changed from orbit to a racetrack to reduce data link disconnects which were caused by blind spots as a result of the bank angle. 
+* **[Flight Planning]**  Added a new helo mission type: Airlift which can be used to load and transport infantry troops to an enemy CP to capture it.
 * **[Modding]** Updated UH-60L mod version support to 1.3.1
 * **[Modding]** Updated the High Digit SAMs implementation and added the HQ-2 as well as the upgraded SA-2 and SA-3 Launchers from the mod. Threat range circles will now also be displayed correctly.
 * **[UI]** Added options to the loadout editor for setting properties such as HMD choice.

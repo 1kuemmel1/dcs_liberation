@@ -303,6 +303,9 @@ class WaypointBuilder:
     def oca_strike_area(self, target: MissionTarget) -> FlightWaypoint:
         return self._target_area(f"ATTACK {target.name}", target, flyover=True)
 
+    def assault_area(self, target: MissionTarget) -> FlightWaypoint:
+        return self._target_area(f"ASSAULT {target.name}", target)
+
     @staticmethod
     def _target_area(
         name: str,
@@ -491,36 +494,39 @@ class WaypointBuilder:
         )
 
     @staticmethod
-    def pickup(control_point: ControlPoint) -> FlightWaypoint:
+    def pickup(pick_up: MissionTarget) -> FlightWaypoint:
         """Creates a cargo pickup waypoint.
 
         Args:
             control_point: Pick up location.
         """
+        control_point = pick_up if isinstance(pick_up, ControlPoint) else None
         return FlightWaypoint(
             "PICKUP",
             FlightWaypointType.PICKUP,
-            control_point.position,
+            pick_up.position,
             meters(0),
             "RADIO",
-            description=f"Pick up cargo from {control_point}",
+            description=f"Pick up cargo from {pick_up}",
             pretty_name="Pick up location",
+            control_point=control_point,
         )
 
     @staticmethod
-    def drop_off(control_point: ControlPoint) -> FlightWaypoint:
+    def drop_off(drop_off: MissionTarget) -> FlightWaypoint:
         """Creates a cargo drop-off waypoint.
 
         Args:
             control_point: Drop-off location.
         """
+        control_point = drop_off if isinstance(drop_off, ControlPoint) else None
         return FlightWaypoint(
             "DROP OFF",
-            FlightWaypointType.PICKUP,
-            control_point.position,
+            FlightWaypointType.DROP_OFF,
+            drop_off.position,
             meters(0),
             "RADIO",
-            description=f"Drop off cargo at {control_point}",
+            description=f"Drop off cargo at {drop_off}",
             pretty_name="Drop off location",
             control_point=control_point,
         )

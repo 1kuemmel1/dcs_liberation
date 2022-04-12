@@ -10,10 +10,13 @@ from dcs.unit import Skill
 from dcs.unitgroup import FlyingGroup
 
 from game.ato import Flight, FlightType
+from game.ato.flightstate.inflight import InFlight
+from game.ato.flightwaypointtype import FlightWaypointType
 from game.callsigns import callsign_for_support_unit
 from game.data.weapons import Pylon, WeaponType as WeaponTypeEnum
 from game.missiongenerator.airsupport import AirSupport, AwacsInfo, TankerInfo
 from game.missiongenerator.lasercoderegistry import LaserCodeRegistry
+from game.missiongenerator.logisticsgenerator import LogisticsGenerator
 from game.radio.radios import RadioFrequency, RadioRegistry
 from game.radio.tacan import TacanBand, TacanRegistry, TacanUsage
 from game.runways import RunwayData
@@ -73,6 +76,14 @@ class FlightGroupConfigurator:
             divert = self.flight.divert.active_runway(
                 self.game.theater, self.game.conditions, self.dynamic_runways
             )
+
+        if self.flight.flight_type in [
+            FlightType.TRANSPORT,
+            FlightType.AIR_ASSAULT,
+        ] and self.game.settings.plugin_option("ctld"):
+            self.air_support.logistics[self.flight.id] = LogisticsGenerator(
+                self.flight, self.group
+            ).generate_logistics(self.mission)
 
         mission_start_time, waypoints = WaypointGenerator(
             self.flight,
