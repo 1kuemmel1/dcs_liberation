@@ -77,13 +77,22 @@ class FlightGroupConfigurator:
                 self.game.theater, self.game.conditions, self.dynamic_runways
             )
 
-        if self.flight.flight_type in [
-            FlightType.TRANSPORT,
-            FlightType.AIR_ASSAULT,
-        ] and self.game.settings.plugin_option("ctld"):
+        if (
+            self.flight.flight_type
+            in [
+                FlightType.TRANSPORT,
+                FlightType.AIR_ASSAULT,
+            ]
+            and not self.flight.state.in_flight
+            and self.game.settings.plugin_option("ctld")
+        ):
+            transfer = None
+            if self.flight.flight_type == FlightType.TRANSPORT:
+                coalition = self.game.coalition_for(player=self.flight.blue)
+                transfer = coalition.transfers.transfer_for_flight(self.flight)
             self.air_support.logistics[self.flight.id] = LogisticsGenerator(
-                self.flight, self.group
-            ).generate_logistics(self.mission)
+                self.flight, self.group, transfer
+            ).generate_logistics(self.mission, self.game.settings)
 
         mission_start_time, waypoints = WaypointGenerator(
             self.flight,

@@ -16,11 +16,12 @@ from game.ato import Flight, FlightWaypoint
 from game.ato.flightstate import InFlight, WaitingForStart
 from game.ato.flightwaypointtype import FlightWaypointType
 from game.ato.starttype import StartType
+from game.missiongenerator.aircraft.waypoints.stopover import StopoverBuilder
 from game.missiongenerator.airsupport import AirSupport
 from game.settings import Settings
 from game.utils import pairwise
 from .baiingress import BaiIngressBuilder
-from .cargostop import CargoStopBuilder
+from .heloland import HeloLandBuilder
 from .casingress import CasIngressBuilder
 from .deadingress import DeadIngressBuilder
 from .default import DefaultWaypointBuilder
@@ -117,7 +118,7 @@ class WaypointGenerator:
 
     def builder_for_waypoint(self, waypoint: FlightWaypoint) -> PydcsWaypointBuilder:
         builders = {
-            FlightWaypointType.DROP_OFF: CargoStopBuilder,
+            FlightWaypointType.DROP_OFF: HeloLandBuilder,
             FlightWaypointType.INGRESS_BAI: BaiIngressBuilder,
             FlightWaypointType.INGRESS_CAS: CasIngressBuilder,
             FlightWaypointType.INGRESS_DEAD: DeadIngressBuilder,
@@ -132,8 +133,9 @@ class WaypointGenerator:
             FlightWaypointType.LOITER: HoldPointBuilder,
             FlightWaypointType.PATROL: RaceTrackEndBuilder,
             FlightWaypointType.PATROL_TRACK: RaceTrackBuilder,
-            FlightWaypointType.PICKUP: CargoStopBuilder,
+            FlightWaypointType.PICKUP: HeloLandBuilder,
             FlightWaypointType.REFUEL: RefuelPointBuilder,
+            FlightWaypointType.STOPOVER: StopoverBuilder,
         }
         builder = builders.get(waypoint.waypoint_type, DefaultWaypointBuilder)
         return builder(

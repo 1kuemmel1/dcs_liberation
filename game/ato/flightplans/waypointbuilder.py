@@ -54,7 +54,7 @@ class WaypointBuilder:
 
     @property
     def is_helo(self) -> bool:
-        return self.flight.unit_type.dcs_unit_type.helicopter
+        return self.flight.is_helo
 
     def takeoff(self, departure: ControlPoint) -> FlightWaypoint:
         """Create takeoff waypoint for the given arrival airfield or carrier.
@@ -494,6 +494,24 @@ class WaypointBuilder:
         )
 
     @staticmethod
+    def stopover(stopover: ControlPoint, name: str = "STOPOVER") -> FlightWaypoint:
+        """Creates a stopover waypoint.
+
+        Args:
+            control_point: Pick up location.
+        """
+        return FlightWaypoint(
+            name,
+            FlightWaypointType.STOPOVER,
+            stopover.position,
+            meters(0),
+            "RADIO",
+            description=f"Stopover at {stopover}",
+            pretty_name="Stopover location",
+            control_point=stopover,
+        )
+
+    @staticmethod
     def pickup(pick_up: MissionTarget) -> FlightWaypoint:
         """Creates a cargo pickup waypoint.
 
@@ -507,7 +525,7 @@ class WaypointBuilder:
             pick_up.position,
             meters(0),
             "RADIO",
-            description=f"Pick up cargo from {pick_up}",
+            description=f"Pick up cargo from {pick_up.name}",
             pretty_name="Pick up location",
             control_point=control_point,
         )
@@ -526,7 +544,7 @@ class WaypointBuilder:
             drop_off.position,
             meters(0),
             "RADIO",
-            description=f"Drop off cargo at {drop_off}",
+            description=f"Drop off cargo at {drop_off.name}",
             pretty_name="Drop off location",
             control_point=control_point,
         )

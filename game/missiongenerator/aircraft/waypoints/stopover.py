@@ -1,9 +1,10 @@
 from dcs.point import MovingPoint, PointAction
+from dcs.task import Land
 
 from .pydcswaypointbuilder import PydcsWaypointBuilder
 
 
-class CargoStopBuilder(PydcsWaypointBuilder):
+class StopoverBuilder(PydcsWaypointBuilder):
     def build(self) -> MovingPoint:
         waypoint = super().build()
         waypoint.type = "LandingReFuAr"

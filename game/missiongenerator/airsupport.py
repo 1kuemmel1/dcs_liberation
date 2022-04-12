@@ -52,6 +52,15 @@ class JtacInfo:
 
 
 @dataclass
+class CargoInfo:
+    """Cargo information."""
+
+    unit_type: str = field(default_factory=str)
+    spawn_zone: str = field(default_factory=str)
+    amount: int = field(default=1)
+
+
+@dataclass
 class LogisticsInfo:
     """Logistics information."""
 
@@ -60,7 +69,8 @@ class LogisticsInfo:
     drop_off_zone: str = field(default_factory=str)
     target_zone: str = field(default_factory=str)
     blue: bool = field(default_factory=bool)
-    preload: bool = field(default_factory=bool)
+    cargo: list[CargoInfo] = field(default_factory=list)
+    logistic_unit: str = field(default_factory=str)
 
 
 @dataclass

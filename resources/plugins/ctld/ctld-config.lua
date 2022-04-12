@@ -5,6 +5,14 @@
 -- see https://github.com/dcs-liberation/dcs_liberation
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+function spawn_crates()
+    --- CrateSpawn script which needs to be run after CTLD was initialized (2s)
+    env.info("DCSLiberation|CTLD plugin - Spawn crates")
+    for _, crate in pairs(dcsLiberation.Logistics.crates) do
+        ctld.spawnCrateAtZone(crate.coalition, tonumber(crate.weight), crate.zone)
+    end
+end
+
 -- CTLD plugin - configuration
 if dcsLiberation then
     local ctld_pickup_smoke = "none"
@@ -22,12 +30,45 @@ if dcsLiberation then
 
             ctld.Debug = dcsLiberation.plugins.ctld.debug
             ctld.Trace = dcsLiberation.plugins.ctld.debug
+            ctld.slingLoad = dcsLiberation.plugins.ctld.slingload
+            ctld.enableCrates = true
+            ctld.enableSmokeDrop = false
+            ctld.enabledRadioBeaconDrop = false
+            ctld.vehiclesForTransportRED = {}
+            ctld.vehiclesForTransportBLUE = {}
             ctld.transportPilotNames = {}
+            ctld.logisticUnits = {}
             ctld.pickupZones = {}
             ctld.dropOffZones = {}
             ctld.wpZones = {}
+            ctld.logisticUnits = {}
 
-            for _, item in pairs(dcsLiberation.Logistics) do
+            --- Special unitLoad Settings as proposed in #2174
+            ctld.unitLoadLimits = {
+                ["SA342Mistral"] = 2,
+                ["SA342Minigun"] = 1,
+                ["SA342L"] = 2,
+                ["SA342M"] = 2,
+                ["UH-1H"] = 6,
+                ["Mi-24P"] = 6,
+                ["Mi-8MT"] = 12,
+                ["UH-60L"] = 10,
+            }
+            ctld.unitActions = {
+                ["SA342Mistral"] = { crates = false, troops = true },
+                ["SA342Minigun"] = { crates = false, troops = true },
+                ["SA342L"] = { crates = false, troops = true },
+                ["SA342M"] = { crates = false, troops = true },
+                ["Ka-50"] = { crates = true, troops = false },
+                ["Mi-24P"] = { crates = true, troops = true },
+            }
+
+            local spawnable_crates = {}
+            for _, crate in pairs(dcsLiberation.Logistics.spawnable_crates) do
+                table.insert(spawnable_crates, { weight = tonumber(crate.weight), desc = crate.unit, unit = crate.unit })
+            end
+            ctld.spawnableCrates = { ["Liberation Crates"] = spawnable_crates }
+            for _, item in pairs(dcsLiberation.Logistics.flights) do
                 for _, pilot in pairs(item.pilot_names) do
                     table.insert(ctld.transportPilotNames, pilot)
                 end
@@ -35,9 +76,18 @@ if dcsLiberation then
                     ctld_pickup_smoke = "blue"
                     ctld_dropoff_smoke = "green"
                 end
-                table.insert(ctld.pickupZones, { item.pickup_zone, ctld_pickup_smoke, -1, "yes", tonumber(item.side) })
-                table.insert(ctld.dropOffZones, { item.drop_off_zone, ctld_dropoff_smoke, tonumber(item.side) })
-                table.insert(ctld.wpZones, { item.target_zone, "none", "yes", tonumber(item.side) })
+                if item.pickup_zone then
+                    table.insert(ctld.pickupZones, { item.pickup_zone, ctld_pickup_smoke, -1, "yes", tonumber(item.side) })
+                end
+                if item.drop_off_zone then
+                    table.insert(ctld.dropOffZones, { item.drop_off_zone, ctld_dropoff_smoke, tonumber(item.side) })
+                end
+                if item.target_zone then
+                    table.insert(ctld.wpZones, { item.target_zone, "none", "yes", tonumber(item.side) })
+                end
+                if item.logistic_unit then
+                    table.insert(ctld.logisticUnits, item.logistic_unit)
+                end
             end
 
             autolase = dcsLiberation.plugins.ctld.autolase
@@ -60,6 +110,9 @@ if dcsLiberation then
                     end
                     ctld.JTACAutoLase(jtac.dcsUnit, jtac.laserCode, smoke, 'vehicle', nil, { freq = jtac.radio, mod = jtac.modulation, name = jtac.dcsGroupName })
                 end
+            end
+            if dcsLiberation.plugins.ctld.airliftcrates then
+                timer.scheduleFunction(spawn_crates, nil, timer.getTime() + 3)
             end
         end
     end

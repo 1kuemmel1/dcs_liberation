@@ -23,6 +23,21 @@
             "defaultValue": false
         },
         {
+            "nameInUI": "Automatically spawn crates for airlift",
+            "mnemonic": "airliftcrates",
+            "defaultValue": false
+        },
+        {
+            "nameInUI": "Create logistic unit in pickup zone",
+            "mnemonic": "logisticunit",
+            "defaultValue": true
+        },
+        {
+            "nameInUI": "Use real Sling Loading",
+            "mnemonic": "slingload",
+            "defaultValue": false
+        },
+        {
             "nameInUI": "CTLD Debug",
             "mnemonic": "debug",
             "defaultValue": false

@@ -81,13 +81,32 @@ class LuaGenerator:
             jtac_item.add_key_value("modulation", jtac.freq.modulation.name)
 
         logistics_object = lua_data.add_item("Logistics")
+        logistics_flights = logistics_object.add_item("flights")
+        crates_object = logistics_object.add_item("crates")
+        spawnable_crates: dict[str, str] = {}
         for logistic_info in self.air_support.logistics.values():
-            logistics_item = logistics_object.add_item()
+            coalition_color = "blue" if logistic_info.blue else "red"
+            logistics_item = logistics_flights.add_item()
             logistics_item.add_data_array("pilot_names", logistic_info.pilot_names)
             logistics_item.add_key_value("pickup_zone", logistic_info.pickup_zone)
             logistics_item.add_key_value("drop_off_zone", logistic_info.drop_off_zone)
             logistics_item.add_key_value("target_zone", logistic_info.target_zone)
             logistics_item.add_key_value("side", str(2 if logistic_info.blue else 1))
+            logistics_item.add_key_value("logistic_unit", logistic_info.logistic_unit)
+            for cargo in logistic_info.cargo:
+                if cargo.unit_type not in spawnable_crates:
+                    spawnable_crates[cargo.unit_type] = str(200 + len(spawnable_crates))
+                crate_weight = spawnable_crates[cargo.unit_type]
+                for i in range(cargo.amount):
+                    cargo_item = crates_object.add_item()
+                    cargo_item.add_key_value("weight", crate_weight)
+                    cargo_item.add_key_value("coalition", coalition_color)
+                    cargo_item.add_key_value("zone", cargo.spawn_zone)
+        spawnable_crates_object = logistics_object.add_item("spawnable_crates")
+        for unit, weight in spawnable_crates.items():
+            crate_item = spawnable_crates_object.add_item()
+            crate_item.add_key_value("unit", unit)
+            crate_item.add_key_value("weight", weight)
 
         target_points = lua_data.add_item("TargetPoints")
         for flight in self.flights:
@@ -224,6 +243,9 @@ class LuaItem(ABC):
 
     def set_value(self, value: str) -> None:
         self.value = LuaValue(None, value)
+
+    def set_data_array(self, values: list[str]) -> None:
+        self.value = LuaValue(None, values)
 
     def add_data_array(self, key: str, values: list[str]) -> None:
         self._add_value(LuaValue(key, values))
