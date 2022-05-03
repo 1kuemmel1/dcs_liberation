@@ -10,8 +10,6 @@ from dcs.unit import Skill
 from dcs.unitgroup import FlyingGroup
 
 from game.ato import Flight, FlightType
-from game.ato.flightstate.inflight import InFlight
-from game.ato.flightwaypointtype import FlightWaypointType
 from game.callsigns import callsign_for_support_unit
 from game.data.weapons import Pylon, WeaponType as WeaponTypeEnum
 from game.missiongenerator.missiondata import MissionData, AwacsInfo, TankerInfo
@@ -77,22 +75,19 @@ class FlightGroupConfigurator:
                 self.game.theater, self.game.conditions, self.dynamic_runways
             )
 
-        if (
-            self.flight.flight_type
-            in [
-                FlightType.TRANSPORT,
-                FlightType.AIR_ASSAULT,
-            ]
-            and not self.flight.state.in_flight
-            and self.game.settings.plugin_option("ctld")
-        ):
+        if self.flight.flight_type in [
+            FlightType.TRANSPORT,
+            FlightType.AIR_ASSAULT,
+        ] and self.game.settings.plugin_option("ctld"):
             transfer = None
             if self.flight.flight_type == FlightType.TRANSPORT:
                 coalition = self.game.coalition_for(player=self.flight.blue)
                 transfer = coalition.transfers.transfer_for_flight(self.flight)
-            self.mission_data.logistics[self.flight.id] = LogisticsGenerator(
-                self.flight, self.group, transfer
-            ).generate_logistics(self.mission, self.game.settings)
+            self.mission_data.logistics.append(
+                LogisticsGenerator(
+                    self.flight, self.group, self.mission, self.game.settings, transfer
+                ).generate_logistics()
+            )
 
         mission_start_time, waypoints = WaypointGenerator(
             self.flight,

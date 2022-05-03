@@ -1,10 +1,9 @@
 from __future__ import annotations
-from collections import defaultdict
 
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Optional, TYPE_CHECKING
-from uuid import UUID
+from game.dcs.aircrafttype import AircraftType
 from game.missiongenerator.aircraft.flightdata import FlightData
 
 from game.runways import RunwayData
@@ -74,13 +73,16 @@ class CargoInfo:
 class LogisticsInfo:
     """Logistics information."""
 
-    pilot_names: list[str] = field(default_factory=list)
+    pilot_names: list[str]
+    transport: AircraftType
+    blue: bool
+
+    logistic_unit: str = field(default_factory=str)
     pickup_zone: str = field(default_factory=str)
     drop_off_zone: str = field(default_factory=str)
     target_zone: str = field(default_factory=str)
-    blue: bool = field(default_factory=bool)
     cargo: list[CargoInfo] = field(default_factory=list)
-    logistic_unit: str = field(default_factory=str)
+    preload: bool = field(default=False)
 
 
 @dataclass
@@ -91,6 +93,4 @@ class MissionData:
     flights: list[FlightData] = field(default_factory=list)
     tankers: list[TankerInfo] = field(default_factory=list)
     jtacs: list[JtacInfo] = field(default_factory=list)
-    logistics: dict[UUID, LogisticsInfo] = field(
-        default_factory=lambda: defaultdict(LogisticsInfo)
-    )
+    logistics: list[LogisticsInfo] = field(default_factory=list)

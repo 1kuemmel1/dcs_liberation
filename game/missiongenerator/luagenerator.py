@@ -12,6 +12,7 @@ from dcs.translation import String
 from dcs.triggers import TriggerStart
 
 from game.ato import FlightType
+from game.dcs.aircrafttype import AircraftType
 from game.plugins import LuaPluginManager
 from game.theater import TheaterGroundObject
 from game.theater.iadsnetwork.iadsrole import IadsRole
@@ -91,7 +92,10 @@ class LuaGenerator:
         logistics_flights = logistics_object.add_item("flights")
         crates_object = logistics_object.add_item("crates")
         spawnable_crates: dict[str, str] = {}
-        for logistic_info in self.mission_data.logistics.values():
+        transports: list[AircraftType] = []
+        for logistic_info in self.mission_data.logistics:
+            if logistic_info.transport not in transports:
+                transports.append(logistic_info.transport)
             coalition_color = "blue" if logistic_info.blue else "red"
             logistics_item = logistics_flights.add_item()
             logistics_item.add_data_array("pilot_names", logistic_info.pilot_names)
@@ -100,6 +104,12 @@ class LuaGenerator:
             logistics_item.add_key_value("target_zone", logistic_info.target_zone)
             logistics_item.add_key_value("side", str(2 if logistic_info.blue else 1))
             logistics_item.add_key_value("logistic_unit", logistic_info.logistic_unit)
+            logistics_item.add_key_value(
+                "aircraft_type", logistic_info.transport.dcs_id
+            )
+            logistics_item.add_key_value(
+                "preload", "true" if logistic_info.preload else "false"
+            )
             for cargo in logistic_info.cargo:
                 if cargo.unit_type not in spawnable_crates:
                     spawnable_crates[cargo.unit_type] = str(200 + len(spawnable_crates))
@@ -109,6 +119,17 @@ class LuaGenerator:
                     cargo_item.add_key_value("weight", crate_weight)
                     cargo_item.add_key_value("coalition", coalition_color)
                     cargo_item.add_key_value("zone", cargo.spawn_zone)
+        transport_object = logistics_object.add_item("transports")
+        for transport in transports:
+            transport_item = transport_object.add_item()
+            transport_item.add_key_value("aircraft_type", transport.dcs_id)
+            transport_item.add_key_value("cabin_size", str(transport.cabin_size))
+            transport_item.add_key_value(
+                "troops", "true" if transport.cabin_size > 0 else "false"
+            )
+            transport_item.add_key_value(
+                "crates", "true" if transport.can_carry_crates else "false"
+            )
         spawnable_crates_object = logistics_object.add_item("spawnable_crates")
         for unit, weight in spawnable_crates.items():
             crate_item = spawnable_crates_object.add_item()

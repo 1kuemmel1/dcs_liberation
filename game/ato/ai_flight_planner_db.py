@@ -494,6 +494,7 @@ AIR_ASSAULT_CAPABLE = [
     Mi_26,
     Mi_24P,
     Mi_24V,
+    Hercules,
 ]
 
 DRONES = [MQ_9_Reaper, RQ_1A_Predator, WingLoong_I]

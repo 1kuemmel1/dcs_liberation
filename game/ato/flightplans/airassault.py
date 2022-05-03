@@ -5,8 +5,9 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Iterator, Type
 from game.ato.flightplans.airlift import AirliftLayout
 from game.ato.flightplans.standard import StandardFlightPlan
+from game.theater.controlpoint import ControlPointType
 from game.theater.missiontarget import MissionTarget
-from game.utils import feet
+from game.utils import Distance, feet, meters
 from .ibuilder import IBuilder
 from .waypointbuilder import WaypointBuilder
 
@@ -18,40 +19,54 @@ if TYPE_CHECKING:
 class Builder(IBuilder):
     def build(self) -> AirAssaultLayout:
 
-        altitude = feet(1500)
-        altitude_is_agl = True
+        altitude = feet(1500) if self.flight.is_helo else self.doctrine.ingress_altitude
+        altitude_is_agl = self.flight.is_helo
 
         builder = WaypointBuilder(self.flight, self.coalition)
-        pickup_zone = MissionTarget(
-            "Pickup Zone", self.flight.departure.position.random_point_within(1200, 600)
-        )
+
+        if not self.flight.is_helo or self.flight.departure.cptype in [
+            ControlPointType.AIRCRAFT_CARRIER_GROUP,
+            ControlPointType.LHA_GROUP,
+            ControlPointType.OFF_MAP,
+        ]:
+            # Non-Helo flights or Off_Map will be preloaded
+            # Carrier operations load the logistics directly from the carrier
+            pickup = None
+            pickup_position = self.flight.departure.position
+        else:
+            # Create a special pickup zone for Helos from Airbase / FOB
+            pickup = builder.pickup(
+                MissionTarget(
+                    "Pickup Zone",
+                    self.flight.departure.position.random_point_within(1200, 600),
+                )
+            )
+            pickup_position = pickup.position
         assault_area = builder.assault_area(self.package.target)
-        heading_from_target = self.package.target.position.heading_between_point(
-            pickup_zone.position
-        )
+        heading = self.package.target.position.heading_between_point(pickup_position)
         drop_off_zone = MissionTarget(
             "Dropoff zone",
-            self.package.target.position.point_from_heading(heading_from_target, 1200),
+            self.package.target.position.point_from_heading(heading, 1200),
         )
 
         return AirAssaultLayout(
             departure=builder.takeoff(self.flight.departure),
             nav_to_pickup=builder.nav_path(
                 self.flight.departure.position,
-                pickup_zone.position,
+                pickup_position,
                 altitude,
                 altitude_is_agl,
             ),
-            pickup=builder.pickup(pickup_zone),
+            pickup=pickup,
             nav_to_drop_off=builder.nav_path(
-                pickup_zone.position,
+                pickup_position,
                 drop_off_zone.position,
                 altitude,
                 altitude_is_agl,
             ),
             drop_off=builder.drop_off(drop_off_zone),
             stopover=None,
-            assault_area=assault_area,
+            target=assault_area,
             nav_to_home=builder.nav_path(
                 drop_off_zone.position,
                 self.flight.arrival.position,
@@ -66,7 +81,7 @@ class Builder(IBuilder):
 
 @dataclass(frozen=True)
 class AirAssaultLayout(AirliftLayout):
-    assault_area: FlightWaypoint
+    target: FlightWaypoint
 
     def iter_waypoints(self) -> Iterator[FlightWaypoint]:
         yield self.departure
@@ -75,7 +90,7 @@ class AirAssaultLayout(AirliftLayout):
             yield self.pickup
         yield from self.nav_to_drop_off
         yield self.drop_off
-        yield self.assault_area
+        yield self.target
         yield from self.nav_to_home
         yield self.arrival
         if self.divert is not None:
@@ -96,12 +111,17 @@ class AirAssaultFlightPlan(StandardFlightPlan[AirAssaultLayout]):
         return self.layout.drop_off
 
     def tot_for_waypoint(self, waypoint: FlightWaypoint) -> timedelta | None:
-        # TOT planning isn't really useful for transports. They're behind the front
-        # lines so no need to wait for escorts or for other missions to complete.
+        if waypoint == self.tot_waypoint:
+            return self.tot
         return None
 
     def depart_time_for_waypoint(self, waypoint: FlightWaypoint) -> timedelta | None:
         return None
+
+    @property
+    def engagement_distance(self) -> Distance:
+        # The radius of the WaypointZone created at the target location
+        return meters(2500)
 
     @property
     def mission_departure_time(self) -> timedelta:

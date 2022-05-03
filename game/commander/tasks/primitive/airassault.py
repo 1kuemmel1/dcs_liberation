@@ -13,11 +13,11 @@ class PlanAirAssault(PackagePlanningTask[ControlPoint]):
     def preconditions_met(self, state: TheaterState) -> bool:
         if self.target not in state.air_assault_targets:
             return False
-        if not self.target_area_preconditions_met(state):
-            # Do not task if air defense is present in the target area
-            return False
         if self.capture_blocked(state):
             # Do not task if there are enemy garrisons blocking the capture
+            return False
+        if not self.target_area_preconditions_met(state):
+            # Do not task if air defense is present in the target area
             return False
         return super().preconditions_met(state)
 
