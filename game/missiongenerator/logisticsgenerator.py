@@ -5,7 +5,7 @@ from dcs.statics import Fortification
 from game.ato import Flight
 from game.ato.flighttype import FlightType
 from game.ato.flightwaypointtype import FlightWaypointType
-from game.missiongenerator.airsupport import CargoInfo, LogisticsInfo
+from game.missiongenerator.missiondata import CargoInfo, LogisticsInfo
 from game.settings.settings import Settings
 from game.transfers import TransferOrder
 

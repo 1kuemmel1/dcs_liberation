@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Optional, TYPE_CHECKING
 from uuid import UUID
+from game.missiongenerator.aircraft.flightdata import FlightData
+
+from game.runways import RunwayData
 
 if TYPE_CHECKING:
     from game.radio.radios import RadioFrequency
@@ -12,43 +15,50 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class AwacsInfo:
-    """AWACS information for the kneeboard."""
-
+class GroupInfo:
     group_name: str
     callsign: str
     freq: RadioFrequency
-    depature_location: Optional[str]
-    start_time: Optional[timedelta]
-    end_time: Optional[timedelta]
     blue: bool
 
 
 @dataclass
-class TankerInfo:
+class UnitInfo(GroupInfo):
+    unit_name: str
+
+
+@dataclass
+class AwacsInfo(GroupInfo):
+    """AWACS information for the kneeboard."""
+
+    depature_location: Optional[str]
+    start_time: Optional[timedelta]
+    end_time: Optional[timedelta]
+
+
+@dataclass
+class TankerInfo(GroupInfo):
     """Tanker information for the kneeboard."""
 
-    group_name: str
-    callsign: str
     variant: str
-    freq: RadioFrequency
     tacan: TacanChannel
     start_time: Optional[timedelta]
     end_time: Optional[timedelta]
-    blue: bool
 
 
-@dataclass(frozen=True)
-class JtacInfo:
+@dataclass
+class CarrierInfo(UnitInfo):
+    """Carrier information."""
+
+    tacan: TacanChannel
+
+
+@dataclass
+class JtacInfo(UnitInfo):
     """JTAC information."""
 
-    group_name: str
-    unit_name: str
-    callsign: str
     region: str
     code: str
-    blue: bool
-    freq: RadioFrequency
 
 
 @dataclass
@@ -74,8 +84,11 @@ class LogisticsInfo:
 
 
 @dataclass
-class AirSupport:
+class MissionData:
     awacs: list[AwacsInfo] = field(default_factory=list)
+    runways: list[RunwayData] = field(default_factory=list)
+    carriers: list[CarrierInfo] = field(default_factory=list)
+    flights: list[FlightData] = field(default_factory=list)
     tankers: list[TankerInfo] = field(default_factory=list)
     jtacs: list[JtacInfo] = field(default_factory=list)
     logistics: dict[UUID, LogisticsInfo] = field(

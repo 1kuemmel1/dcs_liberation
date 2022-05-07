@@ -17,8 +17,7 @@ from game.theater import TheaterGroundObject
 from game.theater.iadsnetwork.iadsrole import IadsRole
 from game.utils import escape_string_for_lua
 
-from .aircraft.flightdata import FlightData
-from .airsupport import AirSupport
+from .missiondata import MissionData
 
 if TYPE_CHECKING:
     from game import Game
@@ -29,13 +28,11 @@ class LuaGenerator:
         self,
         game: Game,
         mission: Mission,
-        air_support: AirSupport,
-        flights: list[FlightData],
+        mission_data: MissionData,
     ) -> None:
         self.game = game
         self.mission = mission
-        self.air_support = air_support
-        self.flights = flights
+        self.mission_data = mission_data
         self.plugin_scripts: list[str] = []
 
     def generate(self) -> None:
@@ -49,10 +46,20 @@ class LuaGenerator:
         install_path.set_value(os.path.abspath("."))
 
         lua_data.add_item("Airbases")
-        lua_data.add_item("Carriers")
+        carriers_object = lua_data.add_item("Carriers")
+
+        for carrier in self.mission_data.carriers:
+            carrier_item = carriers_object.add_item()
+            carrier_item.add_key_value("dcsGroupName", carrier.group_name)
+            carrier_item.add_key_value("unit_name", carrier.unit_name)
+            carrier_item.add_key_value("callsign", carrier.callsign)
+            carrier_item.add_key_value("radio", str(carrier.freq.mhz))
+            carrier_item.add_key_value(
+                "tacan", str(carrier.tacan.number) + carrier.tacan.band.name
+            )
 
         tankers_object = lua_data.add_item("Tankers")
-        for tanker in self.air_support.tankers:
+        for tanker in self.mission_data.tankers:
             tanker_item = tankers_object.add_item()
             tanker_item.add_key_value("dcsGroupName", tanker.group_name)
             tanker_item.add_key_value("callsign", tanker.callsign)
@@ -63,14 +70,14 @@ class LuaGenerator:
             )
 
         awacs_object = lua_data.add_item("AWACs")
-        for awacs in self.air_support.awacs:
+        for awacs in self.mission_data.awacs:
             awacs_item = awacs_object.add_item()
             awacs_item.add_key_value("dcsGroupName", awacs.group_name)
             awacs_item.add_key_value("callsign", awacs.callsign)
             awacs_item.add_key_value("radio", str(awacs.freq.mhz))
 
         jtacs_object = lua_data.add_item("JTACs")
-        for jtac in self.air_support.jtacs:
+        for jtac in self.mission_data.jtacs:
             jtac_item = jtacs_object.add_item()
             jtac_item.add_key_value("dcsGroupName", jtac.group_name)
             jtac_item.add_key_value("callsign", jtac.callsign)
@@ -84,7 +91,7 @@ class LuaGenerator:
         logistics_flights = logistics_object.add_item("flights")
         crates_object = logistics_object.add_item("crates")
         spawnable_crates: dict[str, str] = {}
-        for logistic_info in self.air_support.logistics.values():
+        for logistic_info in self.mission_data.logistics.values():
             coalition_color = "blue" if logistic_info.blue else "red"
             logistics_item = logistics_flights.add_item()
             logistics_item.add_data_array("pilot_names", logistic_info.pilot_names)
@@ -109,7 +116,7 @@ class LuaGenerator:
             crate_item.add_key_value("weight", weight)
 
         target_points = lua_data.add_item("TargetPoints")
-        for flight in self.flights:
+        for flight in self.mission_data.flights:
             if flight.friendly and flight.flight_type in [
                 FlightType.ANTISHIP,
                 FlightType.DEAD,

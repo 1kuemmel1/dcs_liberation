@@ -47,7 +47,7 @@ from game.utils import (
 
 if TYPE_CHECKING:
     from game.missiongenerator.aircraft.flightdata import FlightData
-    from game.missiongenerator.airsupport import AirSupport
+    from game.missiongenerator.missiondata import MissionData
     from game.radio.radios import Radio, RadioFrequency, RadioRegistry
 
 
@@ -281,10 +281,10 @@ class AircraftType(UnitType[Type[FlyingType]]):
         return freq
 
     def assign_channels_for_flight(
-        self, flight: FlightData, air_support: AirSupport
+        self, flight: FlightData, mission_data: MissionData
     ) -> None:
         if self.channel_allocator is not None:
-            self.channel_allocator.assign_channels_for_flight(flight, air_support)
+            self.channel_allocator.assign_channels_for_flight(flight, mission_data)
 
     def channel_name(self, radio_id: int, channel_id: int) -> str:
         return self.channel_namer.channel_name(radio_id, channel_id)

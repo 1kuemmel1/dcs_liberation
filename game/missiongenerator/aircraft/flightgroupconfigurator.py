@@ -14,7 +14,7 @@ from game.ato.flightstate.inflight import InFlight
 from game.ato.flightwaypointtype import FlightWaypointType
 from game.callsigns import callsign_for_support_unit
 from game.data.weapons import Pylon, WeaponType as WeaponTypeEnum
-from game.missiongenerator.airsupport import AirSupport, AwacsInfo, TankerInfo
+from game.missiongenerator.missiondata import MissionData, AwacsInfo, TankerInfo
 from game.missiongenerator.lasercoderegistry import LaserCodeRegistry
 from game.missiongenerator.logisticsgenerator import LogisticsGenerator
 from game.radio.radios import RadioFrequency, RadioRegistry
@@ -43,7 +43,7 @@ class FlightGroupConfigurator:
         radio_registry: RadioRegistry,
         tacan_registry: TacanRegistry,
         laser_code_registry: LaserCodeRegistry,
-        air_support: AirSupport,
+        mission_data: MissionData,
         dynamic_runways: dict[str, RunwayData],
         use_client: bool,
     ) -> None:
@@ -55,7 +55,7 @@ class FlightGroupConfigurator:
         self.radio_registry = radio_registry
         self.tacan_registry = tacan_registry
         self.laser_code_registry = laser_code_registry
-        self.air_support = air_support
+        self.mission_data = mission_data
         self.dynamic_runways = dynamic_runways
         self.use_client = use_client
 
@@ -90,7 +90,7 @@ class FlightGroupConfigurator:
             if self.flight.flight_type == FlightType.TRANSPORT:
                 coalition = self.game.coalition_for(player=self.flight.blue)
                 transfer = coalition.transfers.transfer_for_flight(self.flight)
-            self.air_support.logistics[self.flight.id] = LogisticsGenerator(
+            self.mission_data.logistics[self.flight.id] = LogisticsGenerator(
                 self.flight, self.group, transfer
             ).generate_logistics(self.mission, self.game.settings)
 
@@ -101,7 +101,7 @@ class FlightGroupConfigurator:
             self.game.conditions.start_time,
             self.time,
             self.game.settings,
-            self.air_support,
+            self.mission_data,
         ).create_waypoints()
 
         return FlightData(
@@ -150,7 +150,7 @@ class FlightGroupConfigurator:
     def register_air_support(self, channel: RadioFrequency) -> None:
         callsign = callsign_for_support_unit(self.group)
         if isinstance(self.flight.flight_plan, AewcFlightPlan):
-            self.air_support.awacs.append(
+            self.mission_data.awacs.append(
                 AwacsInfo(
                     group_name=str(self.group.name),
                     callsign=callsign,
@@ -163,7 +163,7 @@ class FlightGroupConfigurator:
             )
         elif isinstance(self.flight.flight_plan, TheaterRefuelingFlightPlan):
             tacan = self.tacan_registry.alloc_for_band(TacanBand.Y, TacanUsage.AirToAir)
-            self.air_support.tankers.append(
+            self.mission_data.tankers.append(
                 TankerInfo(
                     group_name=str(self.group.name),
                     callsign=callsign,

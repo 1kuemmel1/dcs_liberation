@@ -17,7 +17,7 @@ from game.ato.flightstate import InFlight, WaitingForStart
 from game.ato.flightwaypointtype import FlightWaypointType
 from game.ato.starttype import StartType
 from game.missiongenerator.aircraft.waypoints.stopover import StopoverBuilder
-from game.missiongenerator.airsupport import AirSupport
+from game.missiongenerator.missiondata import MissionData
 from game.settings import Settings
 from game.utils import pairwise
 from .baiingress import BaiIngressBuilder
@@ -49,7 +49,7 @@ class WaypointGenerator:
         turn_start_time: datetime,
         time: datetime,
         settings: Settings,
-        air_support: AirSupport,
+        mission_data: MissionData,
     ) -> None:
         self.flight = flight
         self.group = group
@@ -57,7 +57,7 @@ class WaypointGenerator:
         self.elapsed_mission_time = time - turn_start_time
         self.time = time
         self.settings = settings
-        self.air_support = air_support
+        self.mission_data = mission_data
 
     def create_waypoints(self) -> tuple[timedelta, list[FlightWaypoint]]:
         for waypoint in self.flight.points:
@@ -144,7 +144,7 @@ class WaypointGenerator:
             self.flight,
             self.mission,
             self.elapsed_mission_time,
-            self.air_support,
+            self.mission_data,
         )
 
     def _estimate_min_fuel_for(self, waypoints: list[FlightWaypoint]) -> None:
