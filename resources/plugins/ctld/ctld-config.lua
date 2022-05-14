@@ -104,7 +104,7 @@ if dcsLiberation then
             for _, item in pairs(dcsLiberation.Logistics.flights) do
                 for _, pilot in pairs(item.pilot_names) do
                     table.insert(ctld.transportPilotNames, pilot)
-                    if item.preload then
+                    if item.preload == "true" then
                         local amount = ctld.unitLoadLimits[item.aircraft_type]
                         timer.scheduleFunction(preload_troops, { unit = pilot, amount = amount }, timer.getTime() + 5)
                     end
